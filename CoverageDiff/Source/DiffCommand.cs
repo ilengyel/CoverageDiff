@@ -1,6 +1,7 @@
 ﻿namespace CoverageDiff
 {
     using System;
+    using System.IO;
     using CommandLine;
 
     public class DiffCommand
@@ -20,11 +21,11 @@
             {
                 // Currently only unified format is supported.
                 var points = new UnifiedDiffFileReader().ReadSequencePoints(DiffFile);
-                Console.WriteLine("Points:\n" + string.Join("\n", points));
 
                 // Currently only OpenCover is supported.
                 var filter = new OpenCoverFilter();
-                filter.FilterSequencePoints(CoverageFile, OutputFile, points);
+                var output = OutputFile ?? Path.ChangeExtension(CoverageFile, "_diff.xml");
+                filter.FilterSequencePoints(CoverageFile, output, points);
 
                 return 0;
             }

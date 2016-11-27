@@ -16,41 +16,94 @@
             var coverage = doc.Element("CoverageSession");
             var summary = coverage.Element("Summary");
             var modules = coverage.Element("Modules").Elements();
-            foreach (var module in modules)
+            foreach (var module in modules.Where(NotSkipped))
             {
-                if (module.Attribute("skippedDueTo").Value != null)
-                {
-                    module.Remove();
-                    continue;
-                }
-
                 // TODO: Check whether we need to recalculate summary if we remove modules.
                 var files = module.Element("Files").Elements();
                 var points = ToSequencePoints(source, files);
                 if (points.Count == 0)
                 {
-                    module.Remove();
+                    // module.Remove()
+                    module.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
+                    module.Element("Files").Remove();
+                    module.Element("Classes").Remove();
                     continue;
                 }
 
-                Console.WriteLine($"Process module: {module.Element("ModuleName").Value}");
+                var classes = module.Element("Classes").Elements();
+                foreach (var @class in classes.Where(NotSkipped))
+                {
+                    var keepClass = false;
+                    var methods = @class.Element("Methods").Elements();
+                    foreach (var method in methods.Where(NotSkipped))
+                    {
+                        var keepMethod = false;
+                        var sequencePts = method.Element("SequencePoints").Elements();
+                        foreach (var sequencePt in sequencePts.ToList())
+                        {
+                            var seqPt = new SequencePoint(sequencePt.AttrInt("fileid"), sequencePt.AttrInt("sl"));
+                            if (points.Contains(seqPt))
+                            {
+                                keepClass = true;
+                                keepMethod = true;
+                            }
+                            else
+                            {
+                                sequencePt.Remove();
+                            }
+                        }
+
+                        var branchPts = method.Element("BranchPoints").Elements();
+                        foreach (var branchPt in branchPts.ToList())
+                        {
+                            var brPt = new SequencePoint(branchPt.AttrInt("fileid"), branchPt.AttrInt("sl"));
+                            if (points.Contains(brPt))
+                            {
+                                keepClass = true;
+                                keepMethod = true;
+                            }
+                            else
+                            {
+                                branchPt.Remove();
+                            }
+                        }
+
+                        if (!keepMethod)
+                        {
+                            method.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
+                            method.Element("SequencePoints").Remove();
+                            method.Element("BranchPoints").Remove();
+                        }
+                    }
+
+                    if (!keepClass)
+                    {
+                        @class.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
+                        @class.Element("Methods").Remove();
+                    }
+                }
             }
 
             doc.Save(output);
         }
 
+        private bool NotSkipped(XElement element) => element.Attribute("skippedDueTo") == null;
+
         private HashSet<SequencePoint> ToSequencePoints(IList<SourceLine> source, IEnumerable<XElement> files)
         {
             var points = new HashSet<SequencePoint>();
             var filesLookup = files
-                .Select(f => new { FileId = int.Parse(f.Attribute("uid").Value), File = f.Attribute("fullPath").Value })
-                .ToArray();
+                .Select(f => new
+                    {
+                        FileId = int.Parse(f.Attribute("uid").Value),
+                        File = f.Attribute("fullPath").Value.Replace('\\', '/')
+                    }).ToArray();
             foreach (var line in source)
             {
                 var file = filesLookup.FirstOrDefault(fl => fl.File.EndsWith(line.File, StringComparison.OrdinalIgnoreCase));
                 if (file != null)
                 {
-                    points.Add(new SequencePoint { FileId = file.FileId, Line = line.Line });
+                    points.Add(new SequencePoint(file.FileId, line.Line));
                 }
             }
 
@@ -59,9 +112,15 @@
 
         private struct SequencePoint
         {
-            public int FileId { get; set; }
+            public SequencePoint(int fileId, int line)
+            {
+                FileId = fileId;
+                Line = line;
+            }
 
-            public int Line { get; set; }
+            public int FileId { get; }
+
+            public int Line { get; }
 
             public static bool operator ==(SequencePoint left, SequencePoint right)
                 => left.FileId == right.FileId && left.Line == right.Line;

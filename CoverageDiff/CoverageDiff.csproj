@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Source\DiffCommand.cs" />
+    <Compile Include="Source\Helpers\Extensions.cs" />
     <Compile Include="Source\ICoverageProcessor.cs" />
     <Compile Include="Source\Helpers\IOrderedDictionary.cs" />
     <Compile Include="Source\IFileReader.cs" />
