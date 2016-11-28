@@ -12,7 +12,7 @@ A small utility to post-process an [OpenCover XML](https://github.com/OpenCover/
       -c, --coverage    Required. OpenCover tool output as an XML file.
       -d, --diff        Required. Unified format patch file.
       -o, --output      Output file for mutated coverage xml file. If omitted then the coverage
-                        file name with a '_diff' suffix on the file name is used.
+                        file name with a '_diff' suffix added is used.
       --help            Display this help screen.
       --version         Display version information.
       
@@ -20,6 +20,7 @@ A small utility to post-process an [OpenCover XML](https://github.com/OpenCover/
 
 **Example**
 
+    git diff > sample.diff
     CoverageDiff.exe -c OpenCover.xml -d sample.diff 
     tools\ReportGenerator.exe -reports:OpenCover_diff.xml -targetdir:Html_Summary -reporttypes:Html;XmlSummary
     
