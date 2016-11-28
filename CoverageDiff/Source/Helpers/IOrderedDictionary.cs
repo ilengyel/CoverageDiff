@@ -1,8 +1,4 @@
-﻿// <copyright file="IOrderedDictionary.cs" company="Schneider-Electric">
-// Copyright (c) Schneider-Electric. All rights reserved.
-// </copyright>
-
-namespace CoverageDiff
+﻿namespace CoverageDiff
 {
     using System.Collections.Generic;
     using System.Collections.Specialized;

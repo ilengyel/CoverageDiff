@@ -14,11 +14,10 @@
             // ... but meh... we all have GBs of ram..
             var doc = XDocument.Load(input);
             var coverage = doc.Element("CoverageSession");
-            var summary = coverage.Element("Summary");
             var modules = coverage.Element("Modules").Elements();
-            foreach (var module in modules.Where(NotSkipped))
+            foreach (var module in modules.Where(IsNotSkipped))
             {
-                // TODO: Check whether we need to recalculate summary if we remove modules.
+                // TODO: Check whether we need to recalculate summary element if we remove modules, classes, etc.
                 var files = module.Element("Files").Elements();
                 var points = ToSequencePoints(source, files);
                 if (points.Count == 0)
@@ -31,65 +30,63 @@
                 }
 
                 var classes = module.Element("Classes").Elements();
-                foreach (var @class in classes.Where(NotSkipped))
+                foreach (var @class in classes.Where(IsNotSkipped))
                 {
-                    var keepClass = false;
-                    var methods = @class.Element("Methods").Elements();
-                    foreach (var method in methods.Where(NotSkipped))
-                    {
-                        var keepMethod = false;
-                        var sequencePts = method.Element("SequencePoints").Elements();
-                        foreach (var sequencePt in sequencePts.ToList())
-                        {
-                            var seqPt = new SequencePoint(sequencePt.AttrInt("fileid"), sequencePt.AttrInt("sl"));
-                            if (points.Contains(seqPt))
-                            {
-                                keepClass = true;
-                                keepMethod = true;
-                            }
-                            else
-                            {
-                                sequencePt.Remove();
-                            }
-                        }
-
-                        var branchPts = method.Element("BranchPoints").Elements();
-                        foreach (var branchPt in branchPts.ToList())
-                        {
-                            var brPt = new SequencePoint(branchPt.AttrInt("fileid"), branchPt.AttrInt("sl"));
-                            if (points.Contains(brPt))
-                            {
-                                keepClass = true;
-                                keepMethod = true;
-                            }
-                            else
-                            {
-                                branchPt.Remove();
-                            }
-                        }
-
-                        if (!keepMethod)
-                        {
-                            method.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
-                            method.Element("SequencePoints").Remove();
-                            method.Element("BranchPoints").Remove();
-                        }
-                    }
-
-                    if (!keepClass)
-                    {
-                        @class.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
-                        @class.Element("Methods").Remove();
-                    }
+                    ProcessClass(points, @class);
                 }
             }
 
             doc.Save(output);
         }
 
-        private bool NotSkipped(XElement element) => element.Attribute("skippedDueTo") == null;
+        private static void ProcessClass(HashSet<SequencePoint> points, XElement @class)
+        {
+            var keepClass = false;
+            var methods = @class.Element("Methods").Elements();
+            foreach (var method in methods.Where(IsNotSkipped))
+            {
+                var keepMethod = false;
+                var sequencePts = method.Element("SequencePoints").Elements();
+                FilterPoints(points, sequencePts, ref keepClass, ref keepMethod);
 
-        private HashSet<SequencePoint> ToSequencePoints(IList<SourceLine> source, IEnumerable<XElement> files)
+                var branchPts = method.Element("BranchPoints").Elements();
+                FilterPoints(points, branchPts, ref keepClass, ref keepMethod);
+
+                if (!keepMethod)
+                {
+                    method.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
+                    method.Element("SequencePoints").Remove();
+                    method.Element("BranchPoints").Remove();
+                }
+            }
+
+            if (!keepClass)
+            {
+                @class.InsertAttribute(0, "skippedDueTo", "DiffCoverageReport");
+                @class.Element("Methods").Remove();
+            }
+        }
+
+        private static void FilterPoints(HashSet<SequencePoint> points, IEnumerable<XElement> methodPts, ref bool keepClass, ref bool keepMethod)
+        {
+            foreach (var methodPt in methodPts.ToList())
+            {
+                var point = new SequencePoint(methodPt.AttrInt("fileid"), methodPt.AttrInt("sl"));
+                if (points.Contains(point))
+                {
+                    keepClass = true;
+                    keepMethod = true;
+                }
+                else
+                {
+                    methodPt.Remove();
+                }
+            }
+        }
+
+        private static bool IsNotSkipped(XElement element) => element.Attribute("skippedDueTo") == null;
+
+        private static HashSet<SequencePoint> ToSequencePoints(IList<SourceLine> source, IEnumerable<XElement> files)
         {
             var points = new HashSet<SequencePoint>();
             var filesLookup = files

@@ -69,10 +69,39 @@
             }
         }
 
-        public IEqualityComparer<TKey> Comparer
+        public IEqualityComparer<TKey> Comparer { get; private set; }
+
+        ICollection<TKey> IDictionary<TKey, TValue>.Keys
         {
-            get;
-            private set;
+            get { return Keys; }
+        }
+
+        ICollection<TValue> IDictionary<TKey, TValue>.Values
+        {
+            get { return Values; }
+        }
+
+        int ICollection<KeyValuePair<TKey, TValue>>.Count
+        {
+            get { return keyedCollection.Count; }
+        }
+
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
+        {
+            get { return false; }
+        }
+
+        TValue IDictionary<TKey, TValue>.this[TKey key]
+        {
+            get
+            {
+                return this[key];
+            }
+
+            set
+            {
+                this[key] = value;
+            }
         }
 
         /// <summary>
@@ -175,6 +204,7 @@
             {
                 throw new ArgumentException($"The index is outside the bounds of the dictionary: {index}");
             }
+
             var kvp = new KeyValuePair<TKey, TValue>(keyedCollection[index].Key, value);
             keyedCollection[index] = kvp;
         }
@@ -204,7 +234,7 @@
         /// </summary>
         /// <param name="key">The key associated with the value to get.</param>
         /// <returns>The value.</returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">When key does not exist.</exception>
         public TValue GetValue(TKey key)
         {
             if (keyedCollection.Contains(key) == false)
@@ -290,11 +320,6 @@
             return ContainsKey(key);
         }
 
-        ICollection<TKey> IDictionary<TKey, TValue>.Keys
-        {
-            get { return Keys; }
-        }
-
         bool IDictionary<TKey, TValue>.Remove(TKey key)
         {
             return Remove(key);
@@ -303,24 +328,6 @@
         bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value)
         {
             return TryGetValue(key, out value);
-        }
-
-        ICollection<TValue> IDictionary<TKey, TValue>.Values
-        {
-            get { return Values; }
-        }
-
-        TValue IDictionary<TKey, TValue>.this[TKey key]
-        {
-            get
-            {
-                return this[key];
-            }
-
-            set
-            {
-                this[key] = value;
-            }
         }
 
         void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
@@ -341,16 +348,6 @@
         void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
             keyedCollection.CopyTo(array, arrayIndex);
-        }
-
-        int ICollection<KeyValuePair<TKey, TValue>>.Count
-        {
-            get { return keyedCollection.Count; }
-        }
-
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
-        {
-            get { return false; }
         }
 
         bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)

@@ -1,8 +1,4 @@
-﻿// <copyright file="UnifiedDiffFileReader.cs" company="Schneider-Electric">
-// Copyright (c) Schneider-Electric. All rights reserved.
-// </copyright>
-
-namespace CoverageDiff
+﻿namespace CoverageDiff
 {
     using System;
     using System.Collections.Generic;
