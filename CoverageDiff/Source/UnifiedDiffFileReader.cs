@@ -31,7 +31,7 @@
             LineAdd
         }
 
-        public string[] Extensions { get; } = new[] { ".diff", ".patch" };
+        public string[] Extensions { get; } = { ".diff", ".patch" };
 
         public List<SourceLine> ReadSequencePoints(string file)
         {

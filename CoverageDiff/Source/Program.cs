@@ -1,10 +1,5 @@
-﻿// <copyright file="Program.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
-namespace CoverageDiff
+﻿namespace CoverageDiff
 {
-    using System;
     using CommandLine;
 
     public static class Program

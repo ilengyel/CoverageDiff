@@ -3,7 +3,6 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Collections.Specialized;
     using System.Linq;
 
@@ -15,8 +14,8 @@
     /// </summary>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    /// <seealso cref="CoverageDiff.Source.IOrderedDictionary{TKey, TValue}" />
-    public class OrderedDictionary<TKey, TValue> : IOrderedDictionary<TKey, TValue>
+    /// <seealso cref="CoverageDiff.IOrderedDictionary{TKey, TValue}" />
+    public sealed class OrderedDictionary<TKey, TValue> : IOrderedDictionary<TKey, TValue>
     {
         private KeyedCollection2<TKey, KeyValuePair<TKey, TValue>> keyedCollection;
 
@@ -91,6 +90,41 @@
             get { return false; }
         }
 
+        ICollection IDictionary.Values
+        {
+            get { return (ICollection)this.Values; }
+        }
+
+        bool IDictionary.IsFixedSize
+        {
+            get { return false; }
+        }
+
+        bool IDictionary.IsReadOnly
+        {
+            get { return false; }
+        }
+
+        ICollection IDictionary.Keys
+        {
+            get { return (ICollection)this.Keys; }
+        }
+
+        int ICollection.Count
+        {
+            get { return ((ICollection)keyedCollection).Count; }
+        }
+
+        bool ICollection.IsSynchronized
+        {
+            get { return ((ICollection)keyedCollection).IsSynchronized; }
+        }
+
+        object ICollection.SyncRoot
+        {
+            get { return ((ICollection)keyedCollection).SyncRoot; }
+        }
+
         TValue IDictionary<TKey, TValue>.this[TKey key]
         {
             get
@@ -135,6 +169,32 @@
             set
             {
                 SetItem(index, value);
+            }
+        }
+
+        object IOrderedDictionary.this[int index]
+        {
+            get
+            {
+                return this[index];
+            }
+
+            set
+            {
+                this[index] = (TValue)value;
+            }
+        }
+
+        object IDictionary.this[object key]
+        {
+            get
+            {
+                return this[(TKey)key];
+            }
+
+            set
+            {
+                this[(TKey)key] = (TValue)value;
             }
         }
 
@@ -380,19 +440,6 @@
             RemoveAt(index);
         }
 
-        object IOrderedDictionary.this[int index]
-        {
-            get
-            {
-                return this[index];
-            }
-
-            set
-            {
-                this[index] = (TValue)value;
-            }
-        }
-
         void IDictionary.Add(object key, object value)
         {
             Add((TKey)key, (TValue)value);
@@ -413,62 +460,14 @@
             return new DictionaryEnumerator<TKey, TValue>(this);
         }
 
-        bool IDictionary.IsFixedSize
-        {
-            get { return false; }
-        }
-
-        bool IDictionary.IsReadOnly
-        {
-            get { return false; }
-        }
-
-        ICollection IDictionary.Keys
-        {
-            get { return (ICollection)this.Keys; }
-        }
-
         void IDictionary.Remove(object key)
         {
             Remove((TKey)key);
         }
 
-        ICollection IDictionary.Values
-        {
-            get { return (ICollection)this.Values; }
-        }
-
-        object IDictionary.this[object key]
-        {
-            get
-            {
-                return this[(TKey)key];
-            }
-
-            set
-            {
-                this[(TKey)key] = (TValue)value;
-            }
-        }
-
         void ICollection.CopyTo(Array array, int index)
         {
             ((ICollection)keyedCollection).CopyTo(array, index);
-        }
-
-        int ICollection.Count
-        {
-            get { return ((ICollection)keyedCollection).Count; }
-        }
-
-        bool ICollection.IsSynchronized
-        {
-            get { return ((ICollection)keyedCollection).IsSynchronized; }
-        }
-
-        object ICollection.SyncRoot
-        {
-            get { return ((ICollection)keyedCollection).SyncRoot; }
         }
 
         private void Initialize(IEqualityComparer<TKey> comparer = null)
@@ -483,118 +482,5 @@
                 keyedCollection = new KeyedCollection2<TKey, KeyValuePair<TKey, TValue>>(x => x.Key);
             }
         }
-
-    }
-
-    public class KeyedCollection2<TKey, TItem> : KeyedCollection<TKey, TItem>
-    {
-        private const string DelegateNullExceptionMessage = "Delegate passed cannot be null";
-        private Func<TItem, TKey> getKeyForItemDelegate;
-
-        public KeyedCollection2(Func<TItem, TKey> getKeyForItemDelegate)
-            : base()
-        {
-            if (getKeyForItemDelegate == null) throw new ArgumentNullException(DelegateNullExceptionMessage);
-            this.getKeyForItemDelegate = getKeyForItemDelegate;
-        }
-
-        public KeyedCollection2(Func<TItem, TKey> getKeyForItemDelegate, IEqualityComparer<TKey> comparer)
-            : base(comparer)
-        {
-            if (getKeyForItemDelegate == null) throw new ArgumentNullException(DelegateNullExceptionMessage);
-            this.getKeyForItemDelegate = getKeyForItemDelegate;
-        }
-
-        protected override TKey GetKeyForItem(TItem item)
-        {
-            return getKeyForItemDelegate(item);
-        }
-
-        public void SortByKeys()
-        {
-            var comparer = Comparer<TKey>.Default;
-            SortByKeys(comparer);
-        }
-
-        public void SortByKeys(IComparer<TKey> keyComparer)
-        {
-            var comparer = new Comparer2<TItem>((x, y) => keyComparer.Compare(GetKeyForItem(x), GetKeyForItem(y)));
-            Sort(comparer);
-        }
-
-        public void SortByKeys(Comparison<TKey> keyComparison)
-        {
-            var comparer = new Comparer2<TItem>((x, y) => keyComparison(GetKeyForItem(x), GetKeyForItem(y)));
-            Sort(comparer);
-        }
-
-        public void Sort()
-        {
-            var comparer = Comparer<TItem>.Default;
-            Sort(comparer);
-        }
-
-        public void Sort(Comparison<TItem> comparison)
-        {
-            var newComparer = new Comparer2<TItem>((x, y) => comparison(x, y));
-            Sort(newComparer);
-        }
-
-        public void Sort(IComparer<TItem> comparer)
-        {
-            List<TItem> list = base.Items as List<TItem>;
-            if (list != null)
-            {
-                list.Sort(comparer);
-            }
-        }
-    }
-
-    public class Comparer2<T> : Comparer<T>
-    {
-        //private readonly Func<T, T, int> _compareFunction;
-        private readonly Comparison<T> compareFunction;
-
-        public Comparer2(Comparison<T> comparison)
-        {
-            if (comparison == null) throw new ArgumentNullException("comparison");
-            compareFunction = comparison;
-        }
-
-        public override int Compare(T arg1, T arg2)
-        {
-            return compareFunction(arg1, arg2);
-        }
-    }
-
-    public class DictionaryEnumerator<TKey, TValue> : IDictionaryEnumerator, IDisposable
-    {
-        readonly IEnumerator<KeyValuePair<TKey, TValue>> impl;
-
-        public void Dispose() { impl.Dispose(); }
-
-        public DictionaryEnumerator(IDictionary<TKey, TValue> value)
-        {
-            this.impl = value.GetEnumerator();
-        }
-
-        public void Reset() { impl.Reset(); }
-
-        public bool MoveNext() { return impl.MoveNext(); }
-
-        public DictionaryEntry Entry
-        {
-            get
-            {
-                var pair = impl.Current;
-                return new DictionaryEntry(pair.Key, pair.Value);
-            }
-        }
-
-        public object Key { get { return impl.Current.Key; } }
-
-        public object Value { get { return impl.Current.Value; } }
-
-        public object Current { get { return Entry; } }
     }
 }

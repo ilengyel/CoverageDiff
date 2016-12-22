@@ -1,0 +1,48 @@
+diff --git a/DevTools/Setup-PrepareDevEnv.bat b/DevTools/Setup-PrepareDevEnv.bat
+index a537bbe..922b146 100644
+--- a/DevTools/Setup-PrepareDevEnv.bat
++++ b/DevTools/Setup-PrepareDevEnv.bat
+@@ -8,8 +8,6 @@ set USAGE=%~nx0 [major] [minor] [releasestring]^
+ releasestring - release string to include in the informational version. Default Dev:^<GitHash^>. if 'Deploy' is provided, then Deploy:^<GitHash^> is used.
+ :::::::::::::::::::::::::::::::::::::::::::::::::::
+ 
+-
+-set WORKINGDIR=%~dp0\packages
+ set ROOT=%~dp0..
+ set PACKAGES=%ROOT%\..\packages
+ set NUGET_EXE=%PACKAGES%\nuget.exe
+@@ -44,7 +42,7 @@ if %BUILDER%==CI if exist %VER_FILE% (
+ call "%~dp0Setup-Version.bat" %MAJOR% %MINOR% %3
+ :ENDGENVER
+ 
+-pushd %WORKINGDIR%
++pushd .
+ 
+ :: Solution dependencies are defined in packages.config
+ :NUGET
+@@ -52,11 +50,14 @@ set NUGET_SRC=http://nuget.org/nuget.exe
+ if not exist "%NUGET_EXE%" (
+     if not exist "%PACKAGES%" mkdir "%PACKAGES%"
+     echo Downloading nuget.exe from %NUGET_SRC% to %NUGET_EXE%
+-    powershell -Command "Invoke-WebRequest %NUGET_SRC% -OutFile %NUGET_EXE%"
++    
++    :: TODO - when win7 not used any more can change to simpler Invoke-WebRequest cmdlet
++    powershell -Command "(New-Object Net.WebClient).DownloadFile('%NUGET_SRC%', '%NUGET_EXE%')"
+ )
+ 
+ echo Restoring NuGet packages
+-"%NUGET_EXE%" restore packages.config
++set PACKAGES_CONFIG=%~dp0packages\packages.config
++"%NUGET_EXE%" restore %PACKAGES_CONFIG%
+ 
+ :SFSDK
+ call :NeedRestore SfSdk
+@@ -85,7 +86,7 @@ goto END
+ :: Usage: call :GetPackageVersion <package name>
+ ::  Sets: PACKAGE_VER to the version of the package
+ :GetPackageVersion
+-set PACKAGESFILE=%WORKINGDIR%\packages.config
++set PACKAGESFILE=%~dp0packages\packages.config
+ set PACKAGE=%1
+ set GETVER_CMD=(Select-xml -path %PACKAGESFILE% -xpath \"//package[@id^='%PACKAGE%']/@version\").Node.Value
+ for /f "usebackq delims=" %%A in (`powershell -Command "%GETVER_CMD%"`) do set PACKAGE_VER=%%A
