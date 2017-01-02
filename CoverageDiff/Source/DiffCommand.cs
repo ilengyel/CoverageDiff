@@ -37,6 +37,6 @@
         }
 
         private static string SuffixDiff(string file)
-            => Path.GetFileNameWithoutExtension(file) + "_diff.xml";
+            => Path.ChangeExtension(file, null) + "_diff.xml";
     }
 }

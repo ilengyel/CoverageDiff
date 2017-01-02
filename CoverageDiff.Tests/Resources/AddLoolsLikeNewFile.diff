@@ -1,0 +1,13 @@
+diff --git a/Readme.md b/Readme.md
+index 8721388..9190d61 100644
+--- a/Readme.md
++++ b/Readme.md
+@@ -2,6 +2,8 @@
+ 
+ A small utility to post-process an [OpenCover XML](https://github.com/OpenCover/opencover) file to only include sequence and branch points that are of interest. This filtered coverage file can still be used as an input of [ReportGenerator](http://danielpalme.github.io/ReportGenerator/) to generate the coverage report just on the relevant code. The main motivation is to be able to quickly see the test coverage quality of a particular code patch or pull request by only showing the coverage details of the code specified by a [Unified Diff](http://www.gnu.org/software/diffutils/manual/html_node/Example-Unified.html#Example-Unified) file.
+ 
++++ Tricky Line.
++
+ ## Usage
+ 
+ **Options**

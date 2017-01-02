@@ -1,0 +1,20 @@
+diff --git ignored line
+index is also ignored
+--- a/OldFile
++++ b/NewFile
+@@ -11,2 +10,0 @@ Some context line with the position
+-
+-Line after deleted blank line
+@@ -47 +45 @@ more context
+-oldModified
++new modified
+@@ -55 +53,2 @@
++
++ new line after new blank line
+diff --git a/DevTools/Tool-Protecode.bat b/DevTools/Tool-Protecode.bat
+index d146f2e..0e65160 100644
+--- a/otherFile
++++ b/OtherFile
+@@ -54 +54 @@ if ERRORLEVEL 1 (
+-set MD_SUMMARY=%REPORTDIR%\summary.md
++set MD_SUMMARY=%REPORTDIR%\SomeTitle

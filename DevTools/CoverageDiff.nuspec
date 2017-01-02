@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>CoverageDiff</id>
+    <version>$version$</version>
+    <title>CoverageDiff</title>
+    <authors>Imre Lengyel</authors>
+    <projectUrl>https://github.com/ilengyel/CoverageDiff</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A small utility to post-process an OpenCover XML file </description>
+    <releaseNotes>Initial package.</releaseNotes>
+    <tags>CodeCoverage Testing OpenCover ReportGenerator</tags>
+  </metadata>
+  <files>
+    <file src="..\Build\CoverageDiff.exe" target="tools" />
+  </files>
+</package>
